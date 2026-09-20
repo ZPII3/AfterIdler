@@ -1,0 +1,214 @@
+﻿<Window x:Class="AfterIdler.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AfterIdler"
+        mc:Ignorable="d"
+        Title="AfterIdler" 
+        Height="50" Width="300"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        MouseLeftButtonDown="MainWindow_MouseLeftButtonDown"
+        Topmost="True">
+
+    <Window.Resources>
+        <!-- 【フォント定義】大文字のFontsに修正されたパス -->
+        <FontFamily x:Key="Dseg7Font">pack://application:,,,/Fonts/#DSEG7 Classic Mini</FontFamily>
+
+        <!-- 野暮ったい立体ボタンの共通スタイル -->
+        <Style x:Key="JdmButtonStyle" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FFEEEEEE" Offset="0.0"/>
+                        <GradientStop Color="#FFCCCCCC" Offset="0.3"/>
+                        <GradientStop Color="#88AAAAAA" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="#000000"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                CornerRadius="3" 
+                                BorderBrush="#FF888888" 
+                                BorderThickness="1.5" 
+                                Background="{TemplateBinding Background}">
+                            <Border CornerRadius="2" BorderBrush="#FFFFFFFF" BorderThickness="1,1,0,0">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#FFFFFFFF" Offset="0.0"/>
+                                            <GradientStop Color="#FFDDDDDD" Offset="0.3"/>
+                                            <GradientStop Color="#99BBBBBB" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#AA888888" Offset="0.0"/>
+                                            <GradientStop Color="#FFCCCCCC" Offset="0.7"/>
+                                            <GradientStop Color="#FFFFFFFF" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Padding" Value="0,1,0,0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- 1. ウィンドウ本体（灰色の角丸・こんもり枠） -->
+    <Border CornerRadius="10" BorderThickness="3" Background="#FFDDDDDD" BorderBrush="#FF999999">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="8" Direction="315" ShadowDepth="4" Opacity="0.4"/>
+        </Border.Effect>
+
+        <!-- 左右レイアウトのためのGrid構成 -->
+        <Grid Margin="4,6,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- 左側：ロゴ ＋ 液晶ディスプレイエリア -->
+                <ColumnDefinition Width="14"/>
+                <!-- 中央：縦長LEDを置くための隙間（14pixに変更） -->
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="32"/>
+                <ColumnDefinition Width="32"/>
+                <!-- 右側：ミニマムボタンエリア -->
+            </Grid.ColumnDefinitions>
+
+            <!-- ================= 左側エリア：液晶 ================= -->
+            <Grid Grid.Column="0">
+                <Border CornerRadius="6" Background="#FF050505" 
+                        BorderBrush="#FF777777" BorderThickness="1,1,2,2" HorizontalAlignment="Stretch" Width="146">
+                    <Grid Margin="4">
+                        <!-- A. 通常の温度表示モード -->
+                        <Grid x:Name="TemperatureDisplayGrid" Visibility="Visible">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- CPUエリア -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock x:Name="CpuLabelText" Text="CPU" FontSize="10" Foreground="#FF9900" FontWeight="Bold" Margin="0,0,3,0" VerticalAlignment="Bottom" Opacity="0.7"/>
+                                <Grid>
+                                    <TextBlock x:Name="CpuTempBlank" Text="88" FontFamily="{StaticResource Dseg7Font}" FontSize="18" Foreground="#FF9900" Opacity="0.2"/>
+                                    <TextBlock x:Name="CpuTempText" Text="--" FontFamily="{StaticResource Dseg7Font}" FontSize="18" Foreground="#FF9900">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#FF9900" BlurRadius="2" ShadowDepth="0" Opacity="0.8"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </Grid>
+                                <TextBlock x:Name="CpuUnitText" Text="℃" FontSize="10" Foreground="#FF9900" VerticalAlignment="Bottom" FontWeight="Bold" Margin="1,0,0,0"/>
+                            </StackPanel>
+                            <!-- GPUエリア -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock x:Name="GpuLabelText" Text="GPU" FontSize="10" Foreground="#FF9900" FontWeight="Bold" Margin="0,0,3,0" VerticalAlignment="Bottom" Opacity="0.7"/>
+                                <Grid>
+                                    <TextBlock x:Name="GpuTempBlank" Text="88" FontFamily="{StaticResource Dseg7Font}" FontSize="18" Foreground="#FF9900" Opacity="0.2"/>
+                                    <TextBlock x:Name="GpuTempText" Text="--" FontFamily="{StaticResource Dseg7Font}" FontSize="18" Foreground="#FF9900">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect Color="#FF9900" BlurRadius="2" ShadowDepth="0" Opacity="0.8"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </Grid>
+                                <TextBlock x:Name="GpuUnitText"  Text="℃" FontSize="10" Foreground="#FF9900" VerticalAlignment="Bottom" FontWeight="Bold" Margin="1,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- B. カウントダウンモード（グリーン発光表示） -->
+                        <Grid x:Name="CountdownDisplayGrid"
+                              Visibility="Collapsed"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center">
+
+                            <Grid>
+                                <TextBlock Text="88:88"
+                                   FontFamily="{StaticResource Dseg7Font}"
+                                   FontSize="18"
+                                   Foreground="#00FF66"
+                                   Opacity="0.15"/>
+
+                                <TextBlock x:Name="CountdownText"
+                                   Text="03:00"
+                                   FontFamily="{StaticResource Dseg7Font}"
+                                   FontSize="18"
+                                   Foreground="#00FF66">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect Color="#00FF66"
+                                  BlurRadius="4"
+                                  ShadowDepth="0"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                            </Grid>
+                        </Grid>
+
+                        <Grid x:Name="ModeDisplayGrid"
+                          Visibility="Collapsed"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+
+                            <StackPanel Orientation="Horizontal">
+
+                                <TextBlock x:Name="OffModeText"
+                                   Text="OFF"
+                                   FontFamily="{StaticResource Dseg7Font}"
+                                   FontSize="18"
+                                   Margin="0,0,10,0"/>
+
+                                <TextBlock x:Name="SusModeText"
+                                   Text="SUS"
+                                   FontFamily="{StaticResource Dseg7Font}"
+                                   FontSize="18"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+            
+            
+
+            <!-- ================= 中央：縦長LEDインジケーター（約10x32pixで枠内に収める） ================= -->
+            <Border Grid.Column="1" x:Name="StatusLed" Width="10" Height="32" CornerRadius="2" 
+                Background="#280A0A" BorderBrush="#FF777777" BorderThickness="1" 
+                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <!-- ================= 右側エリア：ミニマムボタンエリア ================= -->
+            <UniformGrid Grid.Column="2" Columns="4" VerticalAlignment="Center" Margin="0,0,4,0" Grid.ColumnSpan="4">
+                <!-- 長押し判定のために PreviewMouseLeftButtonDown/Up を追加 -->
+                <Button Content="SET" Style="{StaticResource JdmButtonStyle}" 
+                        Click="SetButton_Click" 
+                        PreviewMouseLeftButtonDown="SetButton_PreviewMouseLeftButtonDown"
+                        PreviewMouseLeftButtonUp="SetButton_PreviewMouseLeftButtonUp"
+                        Height="32" Margin="2,0,1,0" FontSize="10"/>
+                <Button Content="＋" Style="{StaticResource JdmButtonStyle}" Click="PlusButton_Click" Height="32" Margin="2,0,1,0" FontSize="16"/>
+                <Button Content="－" Style="{StaticResource JdmButtonStyle}" Click="MinusButton_Click" Height="32" Margin="2,0,1,0" FontSize="16"/>
+                <Button Content="CAN" Style="{StaticResource JdmButtonStyle}" Click="CancelButton_Click" Height="32" Margin="2,0,1,0" FontSize="10"/>
+            </UniformGrid>
+
+        </Grid>
+    </Border>
+</Window>
