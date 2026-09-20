@@ -1,3 +1,5 @@
+<img width="300" height="50" alt="AfterIdler" src="https://github.com/user-attachments/assets/0ee35c24-2964-445d-aead-cd573a489fe5" />
+
 # AfterIdler v1.0.0
 
 AfterIdler is a simple cooldown timer that monitors CPU / GPU temperatures
